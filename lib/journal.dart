@@ -41,7 +41,6 @@ class _JournalTabState extends State<JournalTab> {
 
   @override
   Widget build(BuildContext context) {
-    print("start " + widget.isteacher);
     return Scaffold(
       body: FutureBuilder<List<MarkInfo>>(
         future: MarkInfo.getMarksForTeacher(widget.teacher, selectedGroupID,
@@ -99,8 +98,10 @@ class _JournalTabState extends State<JournalTab> {
                               selectedGroupID = (value as Group).id;
                               groupController.text = (value as Group).label;
                             },
-                            future: () => Group.getGroupList(
-                                widget.teacher, yearController.text),
+                            future: () {
+                              return Group.getGroupList(User.getUserNoFuture()!.id.toString(),
+                                  yearController.text);
+                            },
                             decoration: InputDecoration(
                                 border: OutlineInputBorder(
                                     borderRadius: BorderRadius.circular(20),
@@ -259,7 +260,9 @@ class _JournalTabState extends State<JournalTab> {
                                 child: Text(
                                     "По заданным параметрам ничего не найдено"));
                           }
-                          currAction = List.generate(snapshot.data!.length, (_)=>null, growable: false);
+                          currAction = List.generate(
+                              snapshot.data!.length, (_) => null,
+                              growable: false);
                           return Container(
                             color: color,
                             height: 60,
@@ -295,7 +298,6 @@ class _JournalTabState extends State<JournalTab> {
                                   padding: const EdgeInsets.only(right: 20),
                                   child: Align(
                                     child: (() {
-                                      print("isteacher = "+widget.isteacher);
                                       if (widget.isteacher == '0') {
                                         return Text(
                                             snapshot.data![index - 1].mark,
@@ -303,31 +305,43 @@ class _JournalTabState extends State<JournalTab> {
                                                 .textTheme
                                                 .headline6);
                                       } else {
-                                       const list = ["н/д", "2", "3", "4", "5"];
-                                       currAction[index-1] = list.firstWhere((element) => snapshot.data![index - 1].mark==element);
-                                       return DropdownButton<String>(
-                                         icon: const SizedBox(width: 20),
-                                         underline: const SizedBox.shrink(),
-                                         value: currAction[index-1],
-                                         elevation: 1,
-                                         style: const TextStyle(
-                                             color: Colors.deepPurple),
-                                         onChanged: (selected) async {
-                                             Exam.setExamMark(snapshot.data![index-1].id, selected);
-                                             setState(() {});
-                                         }, 
-                                         itemHeight: 50,
-                                         items: list
-                                             .map<DropdownMenuItem<String>>(
-                                                 (String value) {
-                                           return DropdownMenuItem<String>(
-                                             value: value,
-                                             child: Text(value,
-                                                 style: const TextStyle(
-                                                     fontSize: 30)),
-                                           );
-                                         }).toList(),
-                                       );
+                                        const list = [
+                                          "н/д",
+                                          "2",
+                                          "3",
+                                          "4",
+                                          "5"
+                                        ];
+                                        currAction[index - 1] = list.firstWhere(
+                                            (element) =>
+                                                snapshot
+                                                    .data![index - 1].mark ==
+                                                element);
+                                        return DropdownButton<String>(
+                                          icon: const SizedBox(width: 20),
+                                          underline: const SizedBox.shrink(),
+                                          value: currAction[index - 1],
+                                          elevation: 1,
+                                          style: const TextStyle(
+                                              color: Colors.deepPurple),
+                                          onChanged: (selected) async {
+                                            Exam.setExamMark(
+                                                snapshot.data![index - 1].id,
+                                                selected);
+                                            setState(() {});
+                                          },
+                                          itemHeight: 50,
+                                          items: list
+                                              .map<DropdownMenuItem<String>>(
+                                                  (String value) {
+                                            return DropdownMenuItem<String>(
+                                              value: value,
+                                              child: Text(value,
+                                                  style: const TextStyle(
+                                                      fontSize: 30)),
+                                            );
+                                          }).toList(),
+                                        );
                                       }
                                     }()),
                                     alignment: Alignment.centerRight,

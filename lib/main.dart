@@ -22,7 +22,7 @@ class MyApp extends StatelessWidget {
         ),
       ),
       //TODO return loginpage
-      home: MainPage(id: '43', isTeacher: '1'),
+      home: LoginPage(),
     );
   }
 }

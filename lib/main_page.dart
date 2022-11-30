@@ -39,7 +39,7 @@ class _MainPageState extends State<MainPage> {
   _selectedPageBuilder(int page) {
     switch (page) {
       case 0:
-        return Expanded(child: JournalTab(teacher: widget.id, isteacher: widget.isTeacher,));
+        return Expanded(child: JournalTab(teacher: widget.id.toString(), isteacher: widget.isTeacher.toString(),));
       case 1:
         return Text("1");
       case 2:

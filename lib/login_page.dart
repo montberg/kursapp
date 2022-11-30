@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:fluttermark/main.dart';
+import 'package:fluttermark/user_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 import 'main_page.dart';
@@ -11,7 +12,6 @@ class LoginPage extends StatefulWidget {
   @override
   State<LoginPage> createState() => _LoginPageState();
 }
-
 class _LoginPageState extends State<LoginPage> {
   @override
   Widget build(BuildContext context) {
@@ -93,10 +93,17 @@ class _LoginPageState extends State<LoginPage> {
                         'password': passwordController.text
                       });
                   if (response.statusCode == 200) {
+                    print(response.body);
                     var jsonResponse = convert.jsonDecode(response.body) as Map<String, dynamic>;
+                    if(user == null){ 
+                      print('getting data');
+                      await User.getData(jsonResponse['values']['id'].toString(), jsonResponse['values']['is_teacher'].toString()); 
+                       print('user initialized');
+                    }
+                    print(user!.id);
                     Navigator.push(
                       context,
-                      MaterialPageRoute(builder: (context) => MainPage(id: jsonResponse['values']['id'], isTeacher: jsonResponse['values']['is_teacher'])),
+                      MaterialPageRoute(builder: (context) => MainPage(id: user!.id.toString(), isTeacher: user!.isTeacher.toString())),
                     );
                   }
                 },

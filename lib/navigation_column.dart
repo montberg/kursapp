@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttermark/main.dart';
 import 'package:fluttermark/user_info.dart';
 
 class NavigationColumn extends StatefulWidget {
@@ -37,7 +38,7 @@ class _NavigationColumnState extends State<NavigationColumn> {
             padding: const EdgeInsets.only(bottom: 40.0),
             child: Align(
                 alignment: Alignment.bottomCenter,
-                child: UserInfoGroup(id: widget.id, isTeacher: widget.isTeacher)),
+                child: UserInfoGroup(id: widget.id.toString(), isTeacher: widget.isTeacher.toString())),
           ),
         ]),
       ),
@@ -54,14 +55,13 @@ class UserInfoGroup extends StatefulWidget {
   State<UserInfoGroup> createState() => _UserInfoGroupState();
 }
 
-User currentUser = User();
 
 class _UserInfoGroupState extends State<UserInfoGroup> {
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<User>(
-        future: currentUser.getData(widget.id, widget.isTeacher, currentUser),
+    return FutureBuilder<User?>(
+        future: User.getUser(),
         builder: ((context, snapshot) {
           if (snapshot.hasData) {
             return Row(
@@ -72,7 +72,7 @@ class _UserInfoGroupState extends State<UserInfoGroup> {
                   const SizedBox(width: 10),
                   Text(snapshot.data!.name, style: Theme.of(context).textTheme.headline4,),
                   const SizedBox(width: 10),
-                  const Icon(Icons.logout_rounded, size: 34),
+                  FloatingActionButton(child: const Icon(Icons.logout_rounded, size: 34, color: textColor,), elevation: 0.0, focusElevation: 0.0, hoverElevation: 0.0, disabledElevation: 0.0, highlightElevation: 0.0, onPressed: ()=>User.logout(context), backgroundColor: Colors.transparent),
                   ]);
           } else {
             return Row(
