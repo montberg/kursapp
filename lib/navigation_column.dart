@@ -22,7 +22,7 @@ class _NavigationColumnState extends State<NavigationColumn> {
     return Container(
       color: const Color.fromARGB(255, 242, 245, 249),
       child: SizedBox(
-        width: 425,
+        width: 300,
         child: Stack(children: [
           const Padding(
             padding: EdgeInsets.only(top: 20.0),
@@ -148,7 +148,7 @@ class _NavigationButtonsGroupState extends State<NavigationButtonsGroup> {
             borderRadius: BorderRadius.circular(20),
             color: containerColor,
             boxShadow: shadow),
-        width: 380,
+        width: 270,
         height: 63,
         child: Row(crossAxisAlignment: CrossAxisAlignment.center, children: [
           const SizedBox(width: 20),
