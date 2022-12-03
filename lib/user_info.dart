@@ -149,7 +149,7 @@ class MarkInfo {
     _name = name;
     _record_book = recordBook;
   }
-
+  static List<MarkInfo> marks = [];
   static Future<List<MarkInfo>> getMarksForTeacher(
       var teacher, var group, var exam, var year) async {
     group = group.toString();
@@ -172,6 +172,7 @@ class MarkInfo {
         outputList.add(currentMarkInfo);
       }
     }
+    marks = outputList;
     return outputList;
   }
 }

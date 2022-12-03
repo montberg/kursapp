@@ -1,8 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:fluttermark/user_info.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:textfield_search/textfield_search.dart';
-
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:open_file/open_file.dart';
+import 'package:printing/printing.dart';
 import 'main.dart';
+import 'navigation_column.dart';
 
 class JournalTab extends StatefulWidget {
   var user_id;
@@ -15,8 +23,8 @@ class JournalTab extends StatefulWidget {
 }
 
 var yearController;
-var groupController;
-var examController;
+late TextEditingController groupController;
+late TextEditingController examController;
 var selectedExamID;
 var selectedGroupID;
 var selectedYear;
@@ -33,7 +41,7 @@ class _JournalTabState extends State<JournalTab> {
 
   @override
   void initState() {
-    if(mounted) {
+    if (mounted) {
       yearController = TextEditingController();
       groupController = TextEditingController();
       examController = TextEditingController();
@@ -71,7 +79,7 @@ class _JournalTabState extends State<JournalTab> {
                         spreadRadius: 0)
                   ]),
                   child: ListView.builder(
-                      itemCount: snapshot.data!.length+1,
+                      itemCount: snapshot.data!.length + 1,
                       itemBuilder: ((context, index) {
                         if (index == 0) {
                           return Container(
@@ -129,7 +137,7 @@ class _JournalTabState extends State<JournalTab> {
                             Padding(
                                 padding: const EdgeInsets.only(left: 10),
                                 child: Align(
-                                  child: Text(snapshot.data![index-1].label,
+                                  child: Text(snapshot.data![index - 1].label,
                                       style: Theme.of(context)
                                           .textTheme
                                           .headline6),
@@ -138,7 +146,7 @@ class _JournalTabState extends State<JournalTab> {
                             Padding(
                                 padding: const EdgeInsets.only(left: 550),
                                 child: Align(
-                                    child: Text(snapshot.data![index-1].date,
+                                    child: Text(snapshot.data![index - 1].date,
                                         style: Theme.of(context)
                                             .textTheme
                                             .headline6),
@@ -146,7 +154,7 @@ class _JournalTabState extends State<JournalTab> {
                             Padding(
                                 padding: const EdgeInsets.only(right: 10),
                                 child: Align(
-                                    child: Text(snapshot.data![index-1].mark,
+                                    child: Text(snapshot.data![index - 1].mark,
                                         style: Theme.of(context)
                                             .textTheme
                                             .headline6),
@@ -181,8 +189,10 @@ class _JournalTabState extends State<JournalTab> {
           widget.user_id, selectedGroupID, selectedExamID, yearController.text),
       builder: (context, snapshot) {
         if (snapshot.hasData) {
+          bool isVisible = MarkInfo.marks.isNotEmpty;
           return Column(
             mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               const SizedBox(height: 10),
               Row(
@@ -334,7 +344,7 @@ class _JournalTabState extends State<JournalTab> {
                         spreadRadius: 0)
                   ]),
                   child: ListView.builder(
-                      itemCount: snapshot.data!.length+1,
+                      itemCount: snapshot.data!.length + 1,
                       itemBuilder: ((context, index) {
                         if (index == 0) {
                           return Container(
@@ -473,7 +483,21 @@ class _JournalTabState extends State<JournalTab> {
                       })),
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 5),
+              Visibility(
+                visible: isVisible,
+                child: FloatingActionButton.extended(
+                    onPressed: () async {
+                      Printing.layoutPdf(
+                        onLayout: (PdfPageFormat format) {
+                          return buildPdf(format);
+                        },
+                      );
+                    },
+                    label: const Text("Сохранить ведомость"),
+                    icon: const Icon(Icons.print)),
+              ),
+              const SizedBox(height: 5),
             ],
           );
         }
@@ -490,5 +514,62 @@ class _JournalTabState extends State<JournalTab> {
         }
       },
     );
+  }
+
+  Future<Uint8List> buildPdf(PdfPageFormat format) async {
+    print(MarkInfo.marks.length);
+    print(MarkInfo.marks.first.name);
+    List<List<String>> listOfmarks = [];
+    listOfmarks.add(<String>['Имя', 'Зачетная книжка', 'Оценка', 'Подпись']);
+    for(var e in MarkInfo.marks){
+      listOfmarks.add(<String>[e.name, e.record_book, e.mark]);
+    }
+    print(listOfmarks.length);
+    final pw.Document doc = pw.Document();
+    DateTime now = DateTime.now();
+    DateTime date = DateTime(now.year, now.month, now.day);
+    final font = await PdfGoogleFonts.robotoBold();
+    final font2 = await PdfGoogleFonts.robotoLight();
+    doc.addPage(
+      pw.Page(
+        pageFormat: format,
+        build: (pw.Context context) {
+          return pw.Column(
+              children: [
+                pw.Align(
+                    child:
+                        pw.Text("Зачетная ведомость №____________", style: pw.TextStyle(font: font)),
+                    alignment: pw.Alignment.center),
+                pw.Align(
+                    child: pw.Text(
+                        '"_____" ___________________ 20___г.',
+                        style: pw.TextStyle(font: font2)),
+                    alignment: pw.Alignment.center),
+                pw.Text("Группа " + groupController.text,
+                    style: pw.TextStyle(font: font2)),
+                pw.Text("Предмет " + examController.text,
+                    style: pw.TextStyle(font: font2)),
+                pw.SizedBox(height: 20),
+                pw.Align(
+                    child: pw.Text("Преподаватель " + teacherName,
+                        style: pw.TextStyle(font: font2)),
+                    alignment: pw.Alignment.centerRight),
+                pw.SizedBox(height: 20),
+                pw.Table.fromTextArray(
+                    context: context,
+                    data: listOfmarks,
+                    cellStyle: pw.TextStyle(font: font2),
+                    headerStyle: pw.TextStyle(font: font),
+                    ),
+                pw.SizedBox(height: 20),
+                pw.Text("Директор института / Декан факультета _________________ ",
+                    style: pw.TextStyle(font: font2)),
+              ]);
+        },
+      ),
+    );
+
+    // Build and return the final Pdf file data
+    return await doc.save();
   }
 }

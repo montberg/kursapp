@@ -55,7 +55,7 @@ class UserInfoGroup extends StatefulWidget {
   State<UserInfoGroup> createState() => _UserInfoGroupState();
 }
 
-
+var teacherName = 'null';
 class _UserInfoGroupState extends State<UserInfoGroup> {
 
   @override
@@ -63,7 +63,9 @@ class _UserInfoGroupState extends State<UserInfoGroup> {
     return FutureBuilder<User?>(
         future: User.getUser(),
         builder: ((context, snapshot) {
+        
           if (snapshot.hasData) {
+            teacherName = snapshot.data!.name;
             return Row(
                 mainAxisSize: MainAxisSize.max,
                 mainAxisAlignment: MainAxisAlignment.center,
