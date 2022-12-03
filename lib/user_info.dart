@@ -52,8 +52,8 @@ class User {
         return LoginPage();
       }, transitionsBuilder: (BuildContext context, Animation<double> animation,
           Animation<double> secondaryAnimation, Widget child) {
-        return new SlideTransition(
-          position: new Tween<Offset>(
+        return SlideTransition(
+          position: Tween<Offset>(
             begin: const Offset(1.0, 0.0),
             end: Offset.zero,
           ).animate(animation),
@@ -88,6 +88,45 @@ class User {
       print(response.body);
     }
 
+  }
+}
+
+class StudentMarkInfo {
+  var _date;
+  get date => _date;
+  var _label;
+  get label => _label;
+  var _mark;
+  get mark => _mark;
+
+  StudentMarkInfo(var date, var label, var mark) {
+    _date = date;
+    _label = label;
+    _mark = mark;
+  }
+
+  static Future<List<StudentMarkInfo>> getMarks(var id) async {
+    List<StudentMarkInfo> outputList = [];
+    var response = await http.post(Uri.http('127.0.0.1:3500', '/api/getmarks/'),
+        body: {'id': id});
+        //print(response.body);
+    if (response.statusCode == 200) {
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var _response = jsonResponse.values.last as List<dynamic>;
+      for (var item in _response) {
+        
+        var temp = item as Map<String, dynamic>;
+        print(temp['date'].runtimeType);
+        var currentMarkInfo = StudentMarkInfo(temp['date'], temp['label'], temp['mark']);
+        //print(currentMarkInfo._date);
+        outputList.add(currentMarkInfo);
+      }
+    }
+    for(StudentMarkInfo a in outputList){
+      print(a._label);
+    }
+    return outputList;
   }
 }
 
