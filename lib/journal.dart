@@ -33,9 +33,11 @@ class _JournalTabState extends State<JournalTab> {
 
   @override
   void initState() {
-    yearController = TextEditingController();
-    groupController = TextEditingController();
-    examController = TextEditingController();
+    if(mounted) {
+      yearController = TextEditingController();
+      groupController = TextEditingController();
+      examController = TextEditingController();
+    }
     super.initState();
   }
 

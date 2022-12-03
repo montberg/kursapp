@@ -1,5 +1,6 @@
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttermark/user_info.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert' as convert;
 
@@ -13,54 +14,154 @@ class StatisticsTab extends StatefulWidget {
 class _StatisticsTabState extends State<StatisticsTab> {
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.vertical,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.start,
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.max,
-        children: [
-          Column(
-            children: [
-              Text(
-                "Средняя оценка по группам",
-                style: Theme.of(context).textTheme.headline4,
+    return Row(
+      children: [
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          mainAxisSize: MainAxisSize.max,
+          children: [
+            SingleChildScrollView(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  Text(
+                    "Средняя оценка по группам",
+                    style: Theme.of(context).textTheme.headline4,
+                  ),
+                  const SizedBox(
+                    height: 5,
+                  ),
+                  SizedBox(
+                    height: 300,
+                    child: AspectRatio(
+                      aspectRatio: 16 / 9,
+                      child: Card(
+                        elevation: 8,
+                        child: Container(
+                          child: const _AvgGroupMark(),
+                          margin: const EdgeInsets.only(top: 20),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              const SizedBox(
-                height: 5,
-              ),
-              SizedBox(
-                height: 300,
-                child: AspectRatio(
-                  aspectRatio: 16 / 9,
-                  child: Card(
-                    elevation: 8,
-                    child: Container(
-                      child: const _AvgGroupMark(),
-                      margin: const EdgeInsets.only(top: 20),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Column(
+              children: [
+                Text(
+                  "Количество пятерок по группам",
+                  style: Theme.of(context).textTheme.headline4,
+                ),
+                const SizedBox(
+                  height: 5,
+                ),
+                SizedBox(
+                  height: 300,
+                  child: AspectRatio(
+                    aspectRatio: 16 / 9,
+                    child: Card(
+                      elevation: 8,
+                      child: Container(
+                        child: _CountGroupMark(),
+                        margin: const EdgeInsets.only(top: 20),
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ],
-          ),
-          SizedBox(
-            height: 300,
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Card(
-                elevation: 8,
-                child: Container(
-                  child: _CountGroupMark(),
-                  margin: const EdgeInsets.only(top: 20),
-                ),
-              ),
+              ],
+            ),
+          ],
+        ),
+        SizedBox(width: 20),
+        Expanded(
+          child: SingleChildScrollView(
+            child: Column(
+              children: [
+                  Text(
+                    "Рейтинг студентов по количеству пятерок",
+                    style: Theme.of(context).textTheme.headline4,
+                  ),
+                const CountStudentMark(),
+              ],
             ),
           ),
+        )
+      ],
+    );
+  }
+}
+
+class CountStudentMark extends StatelessWidget {
+  const CountStudentMark({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 400,
+      child: Column(
+        children: [
+          const ListTile(trailing: Text("Кол-во пятерок"), title: Text('Имя'), leading: SizedBox.shrink(),),
+          FutureBuilder<List<StudentMarksCountInfo>>(
+              future: getMarks(),
+              builder: ((context, snapshot) {
+                if (snapshot.hasData) {
+                  return ListView.builder(
+                      shrinkWrap: true,
+                      itemCount: snapshot.data!.length,
+                      itemBuilder: (BuildContext context, int index) {
+                        return Card(
+                          elevation: 4,
+                          child: ListTile(
+                              leading: Text((index+1).toString()),
+                              trailing:
+                                  Text(snapshot.data![index].count.toString()),
+                              title: Text(snapshot.data![index].full_name)),
+                        );
+                      });
+                } else if (snapshot.hasError) {
+                  return Text(snapshot.error.toString());
+                } else {
+                  return const CircularProgressIndicator();
+                }
+              })),
         ],
       ),
     );
   }
+
+  Future<List<StudentMarksCountInfo>> getMarks() async {
+    List<StudentMarksCountInfo> output = [];
+    var response = await http.post(
+        Uri.http('127.0.0.1:3500', '/api/stats/count5bystudent'),
+        body: {});
+    if (response.statusCode == 200) {
+      var jsonResponse =
+          convert.jsonDecode(response.body) as Map<String, dynamic>;
+      var _response = jsonResponse.values.last as List<dynamic>;
+      int index = 0;
+      for (var item in _response) {
+        var temp = item as Map<String, dynamic>;
+        output.add(StudentMarksCountInfo(
+            count: item['count'], full_name: item['full_name']));
+        index = index + 1;
+      }
+    }
+    return output;
+  }
+}
+
+class StudentMarksCountInfo {
+  final int count;
+
+  final String full_name;
+
+  StudentMarksCountInfo({required this.count, required this.full_name});
 }
 
 class _AvgGroupMark extends StatelessWidget {
@@ -202,9 +303,6 @@ class _AvgGroupMark extends StatelessWidget {
   }
 }
 
-
-
-
 class _CountGroupMark extends StatelessWidget {
   _CountGroupMark();
   late int maxY;
@@ -216,7 +314,6 @@ class _CountGroupMark extends StatelessWidget {
           if (snapshot.hasData) {
             return BarChart(
               BarChartData(
-                 // maxY: maxY,
                   barTouchData: barTouchData,
                   titlesData: titlesData,
                   borderData: borderData,
