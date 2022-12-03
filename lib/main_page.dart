@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:fluttermark/journal.dart';
+import 'package:fluttermark/settings.dart';
+import 'package:fluttermark/stats.dart';
 import 'package:fluttermark/user_info.dart';
 
 import 'navigation_column.dart';
@@ -41,9 +43,9 @@ class _MainPageState extends State<MainPage> {
       case 0:
         return Expanded(child: JournalTab(user_id: widget.id.toString(), isteacher: widget.isTeacher.toString(),));
       case 1:
-        return Text("1");
+        return Expanded(child: StatisticsTab());
       case 2:
-        return Text("2");
+        return Expanded(child: SettingsTab());
     }
   }
 }
